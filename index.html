@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; object-src 'none'">
+<title>日序 · 找回旧记录</title>
+<style>
+:root{color-scheme:light;font-family:'Source Han Sans SC','思源黑体','Microsoft YaHei',sans-serif;color:#243c32;background:#f5f7f2;font-variant-numeric:lining-nums tabular-nums}
+*{box-sizing:border-box}body{margin:0}main{max-width:900px;margin:0 auto;padding:56px 24px 80px}.eyebrow{font-size:13px;letter-spacing:.12em;color:#526958}h1{font-size:32px;line-height:1.35;margin:16px 0}h2{font-size:19px;margin:0 0 12px}p{line-height:1.8;margin:12px 0}a{color:#284e3d;text-underline-offset:4px}code{font:inherit;overflow-wrap:anywhere}.muted{color:#526958;font-size:14px}.panel,article{background:#fff;border:1px solid #dbe3d6;border-radius:18px;padding:24px;margin:20px 0}.notice{border-left:4px solid #a8bc99;padding:0 16px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}.button{display:inline-block;padding:12px 18px;border-radius:10px;background:#345a47;color:white;text-decoration:none;font-weight:600;line-height:1.5}.secondary{background:#eaf0e3;color:#294533}a:focus-visible,summary:focus-visible{outline:3px solid #a36c23;outline-offset:4px}#status{font-weight:600;font-size:19px}.count{font-size:17px}.tag{font-size:12px;color:#526958}details{margin:18px 0 0}summary{cursor:pointer;line-height:1.8}ul{padding-left:22px;line-height:1.8;overflow-wrap:anywhere}pre{font:12px/1.6 monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto;background:#f4f6f1;padding:14px;border-radius:8px}li{margin:4px 0}[hidden]{display:none!important}footer{margin-top:30px;border-top:1px solid #dbe3d6;padding-top:16px}@media(max-width:600px){main{padding:28px 18px 50px}h1{font-size:27px}.panel,article{padding:20px}.actions .button{width:100%;text-align:center}}
+</style>
+</head>
+<body>
+<main>
+<div class="eyebrow">日序 DAYNOTE · 记录恢复</div>
+<h1>找回之前保存的内容。</h1>
+<p>请使用你原来录入日序内容的 <strong>Chrome 浏览器和同一个个人资料</strong>打开这里。这个入口会检查旧网址在当前浏览器留下的日序记录。</p>
+<p class="notice muted">检查和导出都在你的浏览器内完成。原记录保持不变，项目、考勤和日志不会上传到服务器。</p>
+<section class="panel" aria-labelledby="status">
+<div id="status" role="status" aria-live="polite">正在检查本浏览器的旧记录…</div>
+<p id="explanation"></p>
+<p class="muted">正在检查：<code id="origin"></code></p>
+<div class="actions"><a class="button" id="download-all" hidden>下载全部原始副本</a></div>
+<p id="download-help" class="muted" hidden>先保存这份文件，里面保留所有找到的版本，供后续核对。它是恢复材料包，请先不要直接导入网站。</p>
+</section>
+<section id="records" aria-label="找到的记录"></section>
+<section class="panel">
+<h2>接下来怎么做</h2>
+<p>找到记录后，先下载副本，再核对项目名称和记录数量。恢复到新网站前，也应导出新网站现有记录，避免把较新的内容覆盖。</p>
+<p class="muted">如果这里没有找到记录，也不能据此认定数据已经删除：可能保存在 Chrome 的其他个人资料、最早使用的本地网址，或另一个浏览器中。请保留现有浏览器数据。</p>
+<a href="https://nigel9.cn/" target="_blank" rel="noopener noreferrer">打开现在的日序网站 ↗</a>
+</section>
+<footer class="muted">这里只检查日序使用的三个保存位置，不读取其他网站的数据。</footer>
+<noscript><p>浏览器没有运行检查脚本。请在普通 Chrome 窗口中打开此页。</p></noscript>
+</main>
+<script>
+(()=>{
+ 'use strict';
+ const keys=[['daynote.v2','新版保存的记录'],['daynote.v1','早期版本保存的记录'],['daynote.before-personal-import','上次导入个人资料前的副本']];
+ const allowed=['https://nigel-0101.github.io','http://127.0.0.1:4380','http://localhost:4380'];
+ const $=id=>document.getElementById(id),raws={},urls=[];
+ $('origin').textContent=location.origin;
+ if(!allowed.includes(location.origin)){$('status').textContent='恢复入口地址不正确';$('explanation').textContent='请使用原 GitHub 域名下的恢复入口；下载到电脑后直接打开此文件无法读取旧网站的数据。';return}
+ const make=(tag,text,className)=>{const element=document.createElement(tag);element.textContent=text;if(className)element.className=className;return element};
+ function download(link,raw,name){const url=URL.createObjectURL(new Blob([raw],{type:'application/json;charset=utf-8'}));urls.push(url);link.href=url;link.download=name;link.hidden=false;link.dataset.download='true'}
+ let failed=0,found=0;
+ for(const [key,label] of keys){
+   let raw;try{raw=localStorage.getItem(key)}catch(error){failed++;continue}
+   if(raw===null)continue;
+   found++;raws[key]=raw;
+   const card=make('article','');card.dataset.record='true';card.dataset.key=key;
+   card.append(make('h2',label),make('div',key,'tag'));
+   let data,parsed=false;try{data=JSON.parse(raw);parsed=true}catch(error){}
+   if(parsed&&data&&typeof data==='object'&&!Array.isArray(data)){
+     const projects=Array.isArray(data.projects)?data.projects:[],tasks=Array.isArray(data.tasks)?data.tasks:[],logs=Array.isArray(data.logs)?data.logs:[],entries=Array.isArray(data.attendance?.entries)?data.attendance.entries:[];
+     const sampleCount=tasks.filter(t=>t&&t.sample===true).length;
+     card.append(make('p',`${projects.length} 个项目 · ${tasks.length-sampleCount} 个个人任务 · ${logs.length} 条工作日志 · ${entries.length} 条考勤`,'count'));
+     if(sampleCount)card.append(make('p',`另外包含 ${sampleCount} 个示例任务，示例不计入个人任务。`,'muted'));
+     if(projects.length){const preview=make('details','');preview.open=true;preview.append(make('summary','项目名称预览'));const list=make('ul','');for(const p of projects.slice(0,8))list.append(make('li',String(p?.name||p?.title||'未命名项目')));preview.append(list);if(projects.length>8)preview.append(make('p',`另有 ${projects.length-8} 个项目，完整内容保留在导出文件中。`,'muted'));card.append(preview)}
+   }else card.append(make('p',parsed?'找到了保存内容，但结构与常规日序记录不同。先导出原始副本再核对。':'找到了保存内容，但无法解析。原始内容仍可下载，后续再检查是否能够修复。','muted'));
+   const actions=make('div','','actions'),link=make('a','下载这份原始记录','button secondary');download(link,raw,`日序旧记录-${key.replaceAll('.','-')}.json`);actions.append(link);card.append(actions);
+   const detail=make('details','');detail.append(make('summary','查看原始内容（仅在本页显示）'),make('pre',raw));card.append(detail);$('records').append(card);
+ }
+ if(found){
+   $('status').textContent=`找到 ${found} 份保存记录${failed?'，另有位置暂时无法读取':''}`;
+   $('explanation').textContent='请先下载全部原始副本，保存下来后再判断哪份记录最完整。下面各份记录彼此独立，不会自动合并。';
+   download($('download-all'),JSON.stringify({format:'daynote-recovery-raw-v1',origin:location.origin,capturedAt:new Date().toISOString(),records:raws},null,2),'日序恢复材料-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json');
+   $('download-help').hidden=false;
+ }else if(failed){$('status').textContent='当前浏览器无法读取本地记录';$('explanation').textContent='这不是“没有数据”的结果。请使用原来的普通浏览器窗口重试，并保留现有站点数据。'}
+ else{$('status').textContent='这个浏览器位置未找到旧记录';$('explanation').textContent='这里只检查了当前 Chrome 个人资料、当前旧域名下的记录。接下来需要检查当时使用的其他个人资料或最早的本地网址。'}
+ addEventListener('pagehide',()=>urls.forEach(url=>URL.revokeObjectURL(url)));
+})();
+</script>
+</body>
+</html>
