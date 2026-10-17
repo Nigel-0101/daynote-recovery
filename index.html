@@ -70,7 +70,7 @@
    $('download-help').hidden=false;
  }else if(failed){$('status').textContent='当前浏览器无法读取本地记录';$('explanation').textContent='这不是“没有数据”的结果。请使用原来的普通浏览器窗口重试，并保留现有站点数据。'}
  else{$('status').textContent='这个浏览器位置未找到旧记录';$('explanation').textContent='这里只检查了当前 Chrome 个人资料、当前旧域名下的记录。接下来需要检查当时使用的其他个人资料或最早的本地网址。'}
- addEventListener('pagehide',()=>urls.forEach(url=>URL.revokeObjectURL(url)));
+ addEventListener('pagehide',event=>{if(!event.persisted)urls.forEach(url=>URL.revokeObjectURL(url))});
 })();
 </script>
 </body>
